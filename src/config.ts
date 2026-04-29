@@ -1,11 +1,35 @@
 import localize from './localize';
-import { VacuumCardConfig, VacuumCardSetting } from './types';
+import { VacuumCardConfig, VacuumCardSetting, VacuumCardStat } from './types';
 
-function getVacuumSlug(entityId: string): string {
+export function getVacuumSlug(entityId: string): string {
   return entityId.split('.')[1] ?? '';
 }
 
-function getDefaultSettings(entityId: string): VacuumCardSetting[] {
+export function getDefaultHeaderStats(entityId: string): VacuumCardStat[] {
+  const slug = getVacuumSlug(entityId);
+
+  if (!slug) {
+    return [];
+  }
+
+  return [
+    {
+      entity_id: `sensor.${slug}_cleaning_area`,
+      icon: 'mdi:floor-plan',
+      subtitle: 'Area',
+      unit: 'm²',
+    },
+    {
+      entity_id: `sensor.${slug}_cleaning_time`,
+      icon: 'mdi:timer-outline',
+      subtitle: 'Time',
+      value_template: '{{ (value | float(0) / 60) | round(0) }}',
+      unit: 'min',
+    },
+  ];
+}
+
+export function getDefaultSettings(entityId: string): VacuumCardSetting[] {
   const slug = getVacuumSlug(entityId);
 
   if (!slug) {

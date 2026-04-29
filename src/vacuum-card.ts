@@ -102,7 +102,6 @@ export class VacuumCard extends LitElement {
 
   public getCardSize(): number {
     const baseSize = this.config.compact_view ? 3 : 8;
-    const settingsSize = this.settingsOpen ? 5 : 0;
     const mapSize =
       this.mapOpen &&
       this.hasMap() &&
@@ -111,7 +110,7 @@ export class VacuumCard extends LitElement {
         ? 4
         : 0;
 
-    return baseSize + settingsSize + mapSize;
+    return baseSize + mapSize;
   }
 
   public shouldUpdate(changedProps: PropertyValues): boolean {
@@ -448,6 +447,11 @@ export class VacuumCard extends LitElement {
     this.settingsOpen = !this.settingsOpen;
   }
 
+  private closeSettings(event?: Event): void {
+    event?.stopPropagation();
+    this.settingsOpen = false;
+  }
+
   private hasMap(): boolean {
     return Boolean(this.map?.attributes.entity_picture);
   }
@@ -545,9 +549,7 @@ export class VacuumCard extends LitElement {
         class="settings-toggle"
         label="Settings"
         @click="${this.toggleSettings}"
-        ><ha-icon
-          icon="${this.settingsOpen ? 'mdi:chevron-up' : 'mdi:tune-vertical'}"
-        ></ha-icon
+        ><ha-icon icon="mdi:tune-vertical"></ha-icon
       ></ha-icon-button>
     `;
   }
@@ -672,14 +674,39 @@ export class VacuumCard extends LitElement {
     `;
   }
 
-  private renderSettingsPanel(): Template {
+  private renderSettingsDialog(): Template {
     if (!this.hasSettings() || !this.settingsOpen) {
       return nothing;
     }
 
+    const { friendly_name } = this.getAttributes(this.entity);
+
     return html`
-      <div class="settings-panel">
-        ${this.config.settings.map((setting) => this.renderSetting(setting))}
+      <div class="settings-overlay" @click=${this.closeSettings}>
+        <section
+          class="settings-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Vacuum settings"
+          @click=${(event: Event) => event.stopPropagation()}
+        >
+          <div class="settings-dialog-header">
+            <div class="settings-dialog-title">
+              <span>${friendly_name}</span>
+              <h2>Vacuum Settings</h2>
+            </div>
+            <button
+              class="settings-dialog-close"
+              aria-label="Close settings"
+              @click=${this.closeSettings}
+            >
+              <ha-icon icon="mdi:close"></ha-icon>
+            </button>
+          </div>
+          <div class="settings-panel">
+            ${this.config.settings.map((setting) => this.renderSetting(setting))}
+          </div>
+        </section>
       </div>
     `;
   }
@@ -999,13 +1026,14 @@ export class VacuumCard extends LitElement {
               </div>
 
               ${this.renderStats(this.entity.state)}
-              ${this.renderMapPanel('drawer')} ${this.renderSettingsPanel()}
+              ${this.renderMapPanel('drawer')}
             </div>
             ${this.renderMapPanel('side')}
           </div>
         </div>
 
         ${this.renderToolbar(this.entity.state)}
+        ${this.renderSettingsDialog()}
       </ha-card>
     `;
   }

@@ -405,9 +405,89 @@ ha-card {
   color: var(--vc-primary-text-color);
 }
 
+.settings-overlay {
+  align-items: center;
+  background: rgb(0 0 0 / 54%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 18px;
+  position: fixed;
+  z-index: 1000;
+}
+
+.settings-dialog {
+  background: var(--vc-background);
+  border: 1px solid color-mix(in srgb, var(--vc-divider-color) 80%, transparent);
+  border-radius: 16px;
+  box-shadow: 0 22px 70px rgb(0 0 0 / 55%);
+  color: var(--vc-primary-text-color);
+  max-height: min(720px, calc(100vh - 36px));
+  max-width: min(520px, calc(100vw - 36px));
+  overflow: hidden;
+  width: 100%;
+}
+
+.settings-dialog-header {
+  align-items: center;
+  border-bottom: 1px solid var(--vc-divider-color);
+  display: flex;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 0 14px 0 18px;
+}
+
+.settings-dialog-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+
+.settings-dialog-title span {
+  color: var(--vc-secondary-text-color);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-dialog-title h2 {
+  color: var(--vc-primary-text-color);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.settings-dialog-close {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: var(--vc-secondary-text-color);
+  cursor: pointer;
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  padding: 0;
+  width: 40px;
+}
+
+.settings-dialog-close:hover {
+  background: color-mix(in srgb, var(--vc-primary-text-color) 8%, transparent);
+}
+
+.settings-dialog-close ha-icon {
+  --mdc-icon-size: 22px;
+}
+
 .settings-panel {
-  border-top: 1px solid var(--vc-divider-color);
-  padding: 4px 0;
+  max-height: calc(min(720px, 100vh - 36px) - 65px);
+  overflow-y: auto;
+  padding: 4px 0 8px;
   text-align: left;
 }
 
