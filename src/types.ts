@@ -60,6 +60,17 @@ export interface VacuumCardShortcut {
   target?: HassServiceTarget;
 }
 
+export type VacuumCardSetting =
+  | string
+  | {
+      type?: 'section';
+      label?: string;
+      entity?: string;
+      entity_id?: string;
+      name?: string;
+      icon?: string;
+    };
+
 export interface VacuumCardConfig {
   entity: string;
   battery_entity: string;
@@ -73,6 +84,7 @@ export interface VacuumCardConfig {
   stats: Record<string, VacuumCardStat[]>;
   actions: Record<string, VacuumCardAction>;
   shortcuts: VacuumCardShortcut[];
+  settings: VacuumCardSetting[];
 }
 
 export interface VacuumServiceCallParams {

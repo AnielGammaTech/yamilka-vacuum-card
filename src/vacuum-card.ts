@@ -25,6 +25,7 @@ import {
   VacuumEntityState,
   VacuumServiceCallParams,
   VacuumActionParams,
+  VacuumCardSetting,
 } from './types';
 import DEFAULT_IMAGE from './vacuum.svg';
 
@@ -46,12 +47,13 @@ if (!customElements.get('ha-icon-button')) {
   );
 }
 
-@customElement('vacuum-card')
+@customElement('yamilka-vacuum-card')
 export class VacuumCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
 
   @state() private config!: VacuumCardConfig;
   @state() private requestInProgress = false;
+  @state() private settingsOpen = false;
   @state() private thumbUpdater: ReturnType<typeof setInterval> | null = null;
 
   static get styles(): CSSResultGroup {
@@ -95,7 +97,8 @@ export class VacuumCard extends LitElement {
   }
 
   public getCardSize(): number {
-    return this.config.compact_view ? 3 : 8;
+    const baseSize = this.config.compact_view ? 3 : 8;
+    return this.settingsOpen ? baseSize + 5 : baseSize;
   }
 
   public shouldUpdate(changedProps: PropertyValues): boolean {
@@ -312,6 +315,228 @@ export class VacuumCard extends LitElement {
       <div class="tip" @click="${() => this.handleMore(battery.entityId)}">
         <ha-icon icon="${battery.icon}"></ha-icon>
         <span class="tip-title">${battery.value}</span>
+      </div>
+    `;
+  }
+
+  private hasSettings(): boolean {
+    return (
+      Array.isArray(this.config.settings) && this.config.settings.length > 0
+    );
+  }
+
+  private toggleSettings(event: Event): void {
+    event.stopPropagation();
+    this.settingsOpen = !this.settingsOpen;
+  }
+
+  private getSettingEntityId(setting: VacuumCardSetting): string | undefined {
+    if (typeof setting === 'string') {
+      return setting;
+    }
+
+    return setting.entity ?? setting.entity_id;
+  }
+
+  private getSettingLabel(setting: VacuumCardSetting): string {
+    return typeof setting === 'string' ? setting : (setting.label ?? '');
+  }
+
+  private getSettingName(
+    entity: HassEntity,
+    setting: VacuumCardSetting,
+  ): string {
+    if (typeof setting !== 'string' && setting.name) {
+      return setting.name;
+    }
+
+    return entity.attributes.friendly_name ?? entity.entity_id;
+  }
+
+  private getSettingIcon(
+    entity: HassEntity,
+    setting: VacuumCardSetting,
+  ): string {
+    if (typeof setting !== 'string' && setting.icon) {
+      return setting.icon;
+    }
+
+    return stateIcon(entity) ?? 'mdi:cog-outline';
+  }
+
+  private getDomain(entityId: string): string {
+    return entityId.split('.')[0];
+  }
+
+  private toggleSwitch(entityId: string): void {
+    this.hass.callService('switch', 'toggle', {}, { entity_id: entityId });
+  }
+
+  private pressButton(entityId: string): void {
+    this.hass.callService('button', 'press', {}, { entity_id: entityId });
+  }
+
+  private handleSettingSelect(
+    entityId: string,
+    event: CustomEvent<{ item?: { value?: string } }>,
+  ): void {
+    const option = event.detail.item?.value;
+
+    if (!option) {
+      return;
+    }
+
+    this.hass.callService(
+      'select',
+      'select_option',
+      { option },
+      { entity_id: entityId },
+    );
+  }
+
+  private handleSettingRow(entity: HassEntity): void {
+    const domain = this.getDomain(entity.entity_id);
+
+    if (domain === 'button') {
+      this.pressButton(entity.entity_id);
+      return;
+    }
+
+    if (domain === 'switch') {
+      this.toggleSwitch(entity.entity_id);
+      return;
+    }
+
+    this.handleMore(entity.entity_id);
+  }
+
+  private renderSettingsToggle(): Template {
+    if (!this.hasSettings()) {
+      return nothing;
+    }
+
+    return html`
+      <ha-icon-button
+        class="settings-toggle"
+        label="Settings"
+        @click="${this.toggleSettings}"
+        ><ha-icon
+          icon="${this.settingsOpen ? 'mdi:chevron-up' : 'mdi:tune'}"
+        ></ha-icon
+      ></ha-icon-button>
+    `;
+  }
+
+  private renderSettingControl(entity: HassEntity): Template {
+    const domain = this.getDomain(entity.entity_id);
+
+    if (domain === 'select' && Array.isArray(entity.attributes.options)) {
+      return html`
+        <ha-dropdown
+          class="settings-dropdown"
+          placement="bottom"
+          @click=${(event: Event) => event.stopPropagation()}
+          @wa-select=${(event: CustomEvent<{ item?: { value?: string } }>) =>
+            this.handleSettingSelect(entity.entity_id, event)}
+        >
+          <button class="settings-dropdown-trigger" slot="trigger">
+            <span>${entity.state}</span>
+            <ha-icon icon="mdi:menu-down"></ha-icon>
+          </button>
+          ${repeat(
+            entity.attributes.options as string[],
+            (item) => item,
+            (item) => html`
+              <ha-dropdown-item
+                .value=${item}
+                ?checked=${item === entity.state}
+              >
+                ${item}
+              </ha-dropdown-item>
+            `,
+          )}
+        </ha-dropdown>
+      `;
+    }
+
+    if (domain === 'switch') {
+      return html`
+        <ha-switch
+          .checked=${entity.state === 'on'}
+          @click=${(event: Event) => event.stopPropagation()}
+          @change=${() => this.toggleSwitch(entity.entity_id)}
+        ></ha-switch>
+      `;
+    }
+
+    if (domain === 'button') {
+      return html`
+        <button
+          class="settings-row-button"
+          @click=${(event: Event) => {
+            event.stopPropagation();
+            this.pressButton(entity.entity_id);
+          }}
+        >
+          Press
+        </button>
+      `;
+    }
+
+    return html`
+      <span class="settings-state">
+        ${computeStateDisplay(this.hass.localize, entity, this.hass.locale)}
+      </span>
+      <ha-icon class="settings-chevron" icon="mdi:chevron-right"></ha-icon>
+    `;
+  }
+
+  private renderSetting(setting: VacuumCardSetting): Template {
+    const entityId = this.getSettingEntityId(setting);
+
+    if (!entityId) {
+      const label = this.getSettingLabel(setting);
+
+      return label
+        ? html`<div class="settings-section">${label}</div>`
+        : nothing;
+    }
+
+    const entity = this.hass.states[entityId] as HassEntity | undefined;
+
+    if (!entity) {
+      return html`
+        <div class="settings-row unavailable">
+          <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
+          <div class="settings-row-label">
+            <span class="settings-row-name">${entityId}</span>
+            <span class="settings-row-subtitle">Unavailable</span>
+          </div>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="settings-row" @click=${() => this.handleSettingRow(entity)}>
+        <ha-icon icon="${this.getSettingIcon(entity, setting)}"></ha-icon>
+        <div class="settings-row-label">
+          <span class="settings-row-name">
+            ${this.getSettingName(entity, setting)}
+          </span>
+        </div>
+        ${this.renderSettingControl(entity)}
+      </div>
+    `;
+  }
+
+  private renderSettingsPanel(): Template {
+    if (!this.hasSettings() || !this.settingsOpen) {
+      return nothing;
+    }
+
+    return html`
+      <div class="settings-panel">
+        ${this.config.settings.map((setting) => this.renderSetting(setting))}
       </div>
     `;
   }
@@ -569,13 +794,16 @@ export class VacuumCard extends LitElement {
             <div class="tips">
               ${this.renderSource()} ${this.renderBattery()}
             </div>
-            <ha-icon-button
-              class="more-info"
-              icon="mdi:dots-vertical"
-              ?more-info="true"
-              @click="${() => this.handleMore()}"
-              ><ha-icon icon="mdi:dots-vertical"></ha-icon
-            ></ha-icon-button>
+            <div class="header-actions">
+              ${this.renderSettingsToggle()}
+              <ha-icon-button
+                class="more-info"
+                icon="mdi:dots-vertical"
+                ?more-info="true"
+                @click="${() => this.handleMore()}"
+                ><ha-icon icon="mdi:dots-vertical"></ha-icon
+              ></ha-icon-button>
+            </div>
           </div>
 
           ${this.renderMapOrImage(this.entity.state)}
@@ -584,7 +812,7 @@ export class VacuumCard extends LitElement {
             ${this.renderName()} ${this.renderStatus()}
           </div>
 
-          ${this.renderStats(this.entity.state)}
+          ${this.renderStats(this.entity.state)} ${this.renderSettingsPanel()}
         </div>
 
         ${this.renderToolbar(this.entity.state)}
@@ -602,7 +830,7 @@ declare global {
 window.customCards = window.customCards || [];
 window.customCards.push({
   preview: true,
-  type: 'vacuum-card',
-  name: localize('common.name'),
+  type: 'yamilka-vacuum-card',
+  name: 'Yamilka Vacuum Card',
   description: localize('common.description'),
 });
