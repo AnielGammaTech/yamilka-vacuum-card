@@ -1,6 +1,6 @@
 {
   "name": "eufy-s1-vacuum-card",
-  "version": "2.11.7",
+  "version": "1.0.0",
   "type": "module",
   "description": "Eufy S1 vacuum card for Home Assistant Lovelace UI",
   "main": "dist/vacuum-card.js",
