@@ -11,16 +11,21 @@
   --vc-toolbar-icon-color: var(--secondary-text-color);
   --vc-divider-color: var(--entities-divider-color, var(--divider-color));
   --vc-spacing: 10px;
+  --vc-card-width: 260px;
 
   display: flex;
   flex: 1;
   flex-direction: column;
+  margin-inline: auto;
+  max-width: var(--vc-card-width);
+  width: 100%;
 }
 
 ha-card {
   background: var(--vc-background);
   flex-direction: column;
   flex: 1;
+  width: 100%;
   position: relative;
   overflow: hidden;
 }
@@ -97,6 +102,47 @@ ha-card {
     line-height: 1;
     vertical-align: middle;
   }
+}
+
+.header-stats {
+  align-items: center;
+  display: flex;
+  flex: 1 1 110px;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.header-stat {
+  align-items: center;
+  background: color-mix(in srgb, var(--vc-primary-text-color) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--vc-divider-color) 70%, transparent);
+  border-radius: 999px;
+  color: var(--vc-primary-text-color);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 12px;
+  gap: 3px;
+  min-height: 24px;
+  max-width: 110px;
+  padding: 0 8px;
+}
+
+.header-stat ha-icon {
+  --mdc-icon-size: 15px;
+  color: var(--vc-secondary-text-color);
+}
+
+.header-stat-value,
+.header-stat-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-stat-label {
+  color: var(--vc-secondary-text-color);
 }
 
 .map {

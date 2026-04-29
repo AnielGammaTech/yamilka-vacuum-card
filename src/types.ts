@@ -41,6 +41,7 @@ export interface VacuumBatteryEntity extends HassEntityBase {
 export interface VacuumCardStat {
   entity_id?: string;
   attribute?: string;
+  icon?: string;
   value_template?: string;
   unit?: string;
   subtitle?: string;
@@ -77,10 +78,13 @@ export interface VacuumCardConfig {
   map: string;
   map_refresh: number;
   image: string;
+  card_width: string;
   show_name: boolean;
   show_status: boolean;
   show_toolbar: boolean;
+  show_header_stats: boolean;
   compact_view: boolean;
+  header_stats: VacuumCardStat[];
   stats: Record<string, VacuumCardStat[]>;
   actions: Record<string, VacuumCardAction>;
   shortcuts: VacuumCardShortcut[];

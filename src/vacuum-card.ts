@@ -26,6 +26,7 @@ import {
   VacuumServiceCallParams,
   VacuumActionParams,
   VacuumCardSetting,
+  VacuumCardStat,
 } from './types';
 import DEFAULT_IMAGE from './vacuum.svg';
 import YAMILKA_IMAGE from './yamilka-vacuum.png';
@@ -95,6 +96,7 @@ export class VacuumCard extends LitElement {
 
   public setConfig(config: VacuumCardConfig): void {
     this.config = buildConfig(config);
+    this.style.setProperty('--vc-card-width', this.config.card_width);
   }
 
   public getCardSize(): number {
@@ -318,6 +320,111 @@ export class VacuumCard extends LitElement {
         <span class="tip-title">${battery.value}</span>
       </div>
     `;
+  }
+
+  private getVacuumSlug(): string {
+    return this.config.entity.split('.')[1] ?? '';
+  }
+
+  private getDefaultHeaderStats(): VacuumCardStat[] {
+    const slug = this.getVacuumSlug();
+
+    if (!slug) {
+      return [];
+    }
+
+    return [
+      {
+        entity_id: `sensor.${slug}_cleaning_area`,
+        icon: 'mdi:floor-plan',
+        subtitle: 'Area',
+      },
+      {
+        entity_id: `sensor.${slug}_cleaning_time`,
+        icon: 'mdi:timer-outline',
+        subtitle: 'Time',
+        value_template: '{{ (value | float(0) / 60) | round(0) }}',
+        unit: 'min',
+      },
+    ];
+  }
+
+  private getStatState(stat: VacuumCardStat): string | undefined {
+    const { entity_id, attribute } = stat;
+    let value: unknown;
+
+    if (entity_id && attribute) {
+      const entity = this.hass.states[entity_id];
+      value = entity ? get(entity.attributes, attribute) : undefined;
+    } else if (attribute) {
+      value = get(this.entity.attributes, attribute);
+    } else if (entity_id) {
+      value = this.hass.states[entity_id]?.state;
+    }
+
+    return value === undefined || value === null ? undefined : String(value);
+  }
+
+  private renderStatValue(stat: VacuumCardStat, value: string): Template {
+    if (stat.value_template) {
+      return html`
+        <ha-template
+          hass=${this.hass}
+          template=${stat.value_template}
+          value=${value}
+          variables=${{ value }}
+        ></ha-template>
+      `;
+    }
+
+    return html`${value}`;
+  }
+
+  private renderHeaderStats(): Template {
+    if (!this.config.show_header_stats) {
+      return nothing;
+    }
+
+    const statsList = this.config.header_stats.length
+      ? this.config.header_stats
+      : this.getDefaultHeaderStats();
+
+    const stats = statsList.flatMap((stat) => {
+      const value = this.getStatState(stat);
+
+      if (
+        value === undefined ||
+        value === 'unknown' ||
+        value === 'unavailable'
+      ) {
+        return [];
+      }
+
+      return [
+        html`
+        <button
+          class="header-stat"
+          @click=${() => stat.entity_id && this.handleMore(stat.entity_id)}
+        >
+          <ha-icon icon="${stat.icon ?? 'mdi:information-outline'}"></ha-icon>
+          <span class="header-stat-value">
+            ${this.renderStatValue(stat, value)}${stat.unit
+              ? ` ${stat.unit}`
+              : ''}
+          </span>
+          ${stat.subtitle
+            ? html`<span class="header-stat-label">${stat.subtitle}</span>`
+            : nothing}
+        </button>
+      `,
+      ];
+    });
+
+    if (!stats.length) {
+      return nothing;
+    }
+
+    return html`<div class="header-stats">${stats}</div>`;
   }
 
   private hasSettings(): boolean {
@@ -786,6 +893,7 @@ export class VacuumCard extends LitElement {
           <div class="header">
             <div class="tips">
               ${this.renderSource()} ${this.renderBattery()}
+              ${this.renderHeaderStats()}
             </div>
             <div class="header-actions">
               ${this.renderSettingsToggle()}
