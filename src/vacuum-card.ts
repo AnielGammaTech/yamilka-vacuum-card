@@ -764,20 +764,16 @@ export class VacuumCard extends LitElement {
   }
 
   private renderSettingsDialog(): Template {
-    if (!this.hasSettings() || !this.settingsOpen) {
+    if (!this.hasSettings() || !this.settingsOpen || this.isEditorPreview()) {
       return nothing;
     }
 
     const { friendly_name } = this.getAttributes(this.entity);
-    const previewClass = this.isEditorPreview() ? 'editor-preview' : '';
 
     return html`
-      <div
-        class="settings-overlay ${previewClass}"
-        @click=${this.closeSettings}
-      >
+      <div class="settings-overlay" @click=${this.closeSettings}>
         <section
-          class="settings-dialog ${previewClass}"
+          class="settings-dialog"
           role="dialog"
           aria-modal="true"
           aria-label="Vacuum settings"

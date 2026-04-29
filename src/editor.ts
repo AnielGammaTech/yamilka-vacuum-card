@@ -70,23 +70,6 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
       .sort();
   }
 
-  private getEntitiesByDomains(domains: string[] = ENTITY_DOMAINS): string[] {
-    if (!this.hass) {
-      return [];
-    }
-
-    return Object.keys(this.hass.states)
-      .filter((id) => domains.includes(id.split('.')[0]))
-      .sort();
-  }
-
-  private getFriendlyName(entityId: string): string {
-    return (
-      this.hass?.states[entityId]?.attributes.friendly_name ??
-      entityId
-    );
-  }
-
   private updateConfig(
     patch: Partial<VacuumCardConfig>,
     deleteKeys: (keyof VacuumCardConfig)[] = [],
@@ -185,34 +168,22 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
     `;
   }
 
-  private renderEntitySelect(
+  private renderEntityPicker(
     label: string,
     value: string | undefined,
     onChange: (value: string) => void,
     domains: string[] = ENTITY_DOMAINS,
   ): Template {
-    const entities = this.getEntitiesByDomains(domains);
-
     return html`
-      <ha-select
+      <ha-entity-picker
+        .hass=${this.hass}
         .label=${label}
         .value=${value ?? ''}
-        @selected=${(event: Event) =>
-          onChange((event.target as HTMLInputElement).value)}
-        @closed=${(event: Event) => event.stopPropagation()}
-        fixedMenuPosition
-        naturalMenuWidth
-      >
-        <mwc-list-item .value=${''}>None</mwc-list-item>
-        ${entities.map(
-          (entity) => html`
-            <mwc-list-item .value=${entity}>
-              ${this.getFriendlyName(entity)}
-              <span class="entity-id">${entity}</span>
-            </mwc-list-item>
-          `,
-        )}
-      </ha-select>
+        .includeDomains=${domains}
+        allow-custom-entity
+        @value-changed=${(event: CustomEvent<{ value?: string }>) =>
+          onChange(event.detail.value ?? '')}
+      ></ha-entity-picker>
     `;
   }
 
@@ -295,7 +266,7 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
           (row, index) => html`
             <div class="editor-row">
               <div class="row-fields">
-                ${this.renderEntitySelect(
+                ${this.renderEntityPicker(
                   'Entity',
                   row.entity_id,
                   (value) => this.updateHeaderSelect(index, { entity_id: value }),
@@ -374,7 +345,7 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
           (row, index) => html`
             <div class="editor-row">
               <div class="row-fields metric-fields">
-                ${this.renderEntitySelect(
+                ${this.renderEntityPicker(
                   'Entity',
                   row.entity_id,
                   (value) => this.updateHeaderStat(index, { entity_id: value }),
@@ -503,7 +474,7 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
           return html`
             <div class="editor-row">
               <div class="row-fields setting-fields">
-                ${this.renderEntitySelect('Entity', entityId, (value) =>
+                ${this.renderEntityPicker('Entity', entityId, (value) =>
                   this.updateSetting(index, { entity: value }),
                 )}
                 ${this.renderTextInput('Label', row.name, (value) =>
@@ -559,13 +530,6 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
       return nothing;
     }
 
-    const vacuumEntities = this.getEntitiesByType('vacuum');
-    const batteryEntities = this.getEntitiesByType('sensor');
-    const cameraEntities = [
-      ...this.getEntitiesByType('camera'),
-      ...this.getEntitiesByType('image'),
-    ];
-
     return html`
       <div class="card-config">
         <section class="editor-section">
@@ -576,30 +540,29 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
             </div>
           </div>
           <div class="main-grid">
-            ${this.renderSelectInput(
+            ${this.renderEntityPicker(
               localize('editor.entity') ?? 'Entity',
               this.config.entity,
-              vacuumEntities,
               (value) => this.updateConfig({ entity: value }),
-              false,
+              ['vacuum'],
             )}
-            ${this.renderSelectInput(
+            ${this.renderEntityPicker(
               localize('editor.battery_entity') ?? 'Battery Entity',
               this.config.battery_entity,
-              batteryEntities,
               (value) =>
                 value
                   ? this.updateConfig({ battery_entity: value })
                   : this.updateConfig({}, ['battery_entity']),
+              ['sensor'],
             )}
-            ${this.renderSelectInput(
+            ${this.renderEntityPicker(
               localize('editor.map') ?? 'Map Camera',
               this.config.map,
-              cameraEntities,
               (value) =>
                 value
                   ? this.updateConfig({ map: value })
                   : this.updateConfig({}, ['map']),
+              ['camera', 'image'],
             )}
             ${this.renderSelectInput(
               'Map Mode',

@@ -142,15 +142,9 @@
 }
 
 ha-select,
+ha-entity-picker,
 paper-input {
   width: 100%;
-}
-
-.entity-id {
-  color: var(--secondary-text-color);
-  display: block;
-  font-size: 11px;
-  line-height: 1.2;
 }
 
 @media (max-width: 720px) {
