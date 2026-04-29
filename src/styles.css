@@ -448,6 +448,15 @@ ha-card {
   z-index: 1000;
 }
 
+.settings-overlay.editor-preview {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgb(0 0 0 / 48%);
+  padding: 10px;
+  position: absolute;
+  z-index: 20;
+}
+
 .settings-dialog {
   backdrop-filter: blur(28px) saturate(1.35);
   -webkit-backdrop-filter: blur(28px) saturate(1.35);
@@ -473,6 +482,14 @@ ha-card {
   max-width: min(520px, calc(100vw - 36px));
   overflow: hidden;
   width: 100%;
+}
+
+.settings-dialog.editor-preview {
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border-radius: 12px;
+  max-height: calc(100% - 20px);
+  max-width: calc(100% - 20px);
 }
 
 .settings-dialog-header {

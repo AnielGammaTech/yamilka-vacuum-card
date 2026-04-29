@@ -99,6 +99,7 @@ export class VacuumCard extends LitElement {
   public setConfig(config: VacuumCardConfig): void {
     this.config = buildConfig(config);
     this.style.setProperty('--vc-card-width', this.config.card_width);
+    this.settingsOpen = false;
   }
 
   public getCardSize(): number {
@@ -507,6 +508,39 @@ export class VacuumCard extends LitElement {
     this.settingsOpen = false;
   }
 
+  private isEditorPreview(): boolean {
+    return this.isInEditorPreviewTree(this);
+  }
+
+  private isInEditorPreviewTree(current: Node | null): boolean {
+    while (current) {
+      if (
+        current instanceof Element &&
+        current.matches(
+          [
+            'hui-card-preview',
+            'hui-card-element-editor',
+            'hui-dialog-edit-card',
+            'hui-card-options',
+          ].join(','),
+        )
+      ) {
+        return true;
+      }
+
+      const root = current.getRootNode();
+
+      if (root instanceof ShadowRoot) {
+        current = root.host;
+        continue;
+      }
+
+      current = current instanceof Element ? current.parentElement : null;
+    }
+
+    return false;
+  }
+
   private hasMap(): boolean {
     return Boolean(this.map?.attributes.entity_picture);
   }
@@ -735,11 +769,15 @@ export class VacuumCard extends LitElement {
     }
 
     const { friendly_name } = this.getAttributes(this.entity);
+    const previewClass = this.isEditorPreview() ? 'editor-preview' : '';
 
     return html`
-      <div class="settings-overlay" @click=${this.closeSettings}>
+      <div
+        class="settings-overlay ${previewClass}"
+        @click=${this.closeSettings}
+      >
         <section
-          class="settings-dialog"
+          class="settings-dialog ${previewClass}"
           role="dialog"
           aria-modal="true"
           aria-label="Vacuum settings"
