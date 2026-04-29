@@ -25,6 +25,7 @@ import {
   VacuumEntityState,
   VacuumServiceCallParams,
   VacuumActionParams,
+  VacuumCardHeaderSelect,
   VacuumCardSetting,
   VacuumCardStat,
 } from './types';
@@ -329,6 +330,60 @@ export class VacuumCard extends LitElement {
         <span class="tip-title">${battery.value}</span>
       </div>
     `;
+  }
+
+  private formatHeaderSelectLabel(value: string, fallback?: string): string {
+    if (!value || value === 'unknown' || value === 'unavailable') {
+      return fallback ?? 'Select';
+    }
+
+    return value.replace(/\s+\(ID:\s*\d+\)$/i, '');
+  }
+
+  private renderHeaderSelects(): Template {
+    if (!this.config.show_header_selects) {
+      return nothing;
+    }
+
+    const selects = this.config.header_selects.flatMap(
+      (select: VacuumCardHeaderSelect) => {
+        if (!select.entity_id) {
+          return [];
+        }
+
+        const entity = this.hass.states[select.entity_id] as
+          | HassEntity
+          | undefined;
+
+        if (
+          !entity ||
+          this.getDomain(entity.entity_id) !== 'select' ||
+          !Array.isArray(entity.attributes.options)
+        ) {
+          return [];
+        }
+
+        return [
+          this.renderDropdown({
+            icon: select.icon ?? stateIcon(entity) ?? 'mdi:form-dropdown',
+            value: entity.state,
+            options: entity.attributes.options as string[],
+            onSelect: (
+              event: CustomEvent<{ item?: { value?: string } }>,
+            ) => this.handleSettingSelect(entity.entity_id, event),
+            formatLabel: (value: string) =>
+              this.formatHeaderSelectLabel(value, select.name),
+            ariaLabel: select.name ?? entity.attributes.friendly_name,
+          }),
+        ];
+      },
+    );
+
+    if (!selects.length) {
+      return nothing;
+    }
+
+    return html`${selects}`;
   }
 
   private getVacuumSlug(): string {
@@ -997,8 +1052,12 @@ export class VacuumCard extends LitElement {
         <div class="preview">
           <div class="header">
             <div class="tips">
-              ${this.renderSource()} ${this.renderBattery()}
-              ${this.renderHeaderStats()}
+              <div class="tip-row primary">
+                ${this.renderSource()} ${this.renderHeaderSelects()}
+              </div>
+              <div class="tip-row secondary">
+                ${this.renderBattery()} ${this.renderHeaderStats()}
+              </div>
             </div>
             <div class="header-actions">
               ${this.renderMapToggle()}

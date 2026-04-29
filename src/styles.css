@@ -73,6 +73,22 @@ ha-card {
   padding: 10px 0 0 12px;
   text-align: left;
 
+  & .tip-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  & .tip-row.primary {
+    max-width: 164px;
+  }
+
+  & .tip-row.secondary {
+    gap: 5px;
+  }
+
   & .tip {
     color: var(--vc-secondary-text-color);
     cursor: pointer;
@@ -102,6 +118,20 @@ ha-card {
     font: inherit;
     line-height: 1;
     padding: 0;
+  }
+
+  & .dropdown-tip {
+    max-width: 82px;
+  }
+
+  & .dropdown-trigger {
+    max-width: 82px;
+  }
+
+  & .dropdown-trigger .tip-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   & .dropdown-trigger:focus-visible {
@@ -407,7 +437,9 @@ ha-card {
 
 .settings-overlay {
   align-items: center;
-  background: rgb(0 0 0 / 54%);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  background: rgb(0 0 0 / 34%);
   display: flex;
   inset: 0;
   justify-content: center;
@@ -417,7 +449,22 @@ ha-card {
 }
 
 .settings-dialog {
-  background: var(--vc-background);
+  backdrop-filter: blur(28px) saturate(1.35);
+  -webkit-backdrop-filter: blur(28px) saturate(1.35);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color, #1f2228)) 86%,
+        transparent
+      ),
+      color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color, #151820)) 72%,
+        transparent
+      )
+    );
   border: 1px solid color-mix(in srgb, var(--vc-divider-color) 80%, transparent);
   border-radius: 16px;
   box-shadow: 0 22px 70px rgb(0 0 0 / 55%);

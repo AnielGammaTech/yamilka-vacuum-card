@@ -1,5 +1,10 @@
 import localize from './localize';
-import { VacuumCardConfig, VacuumCardSetting, VacuumCardStat } from './types';
+import {
+  VacuumCardConfig,
+  VacuumCardHeaderSelect,
+  VacuumCardSetting,
+  VacuumCardStat,
+} from './types';
 
 export function getVacuumSlug(entityId: string): string {
   return entityId.split('.')[1] ?? '';
@@ -25,6 +30,24 @@ export function getDefaultHeaderStats(entityId: string): VacuumCardStat[] {
       subtitle: 'Time',
       value_template: '{{ (value | float(0) / 60) | round(0) }}',
       unit: 'min',
+    },
+  ];
+}
+
+export function getDefaultHeaderSelects(
+  entityId: string,
+): VacuumCardHeaderSelect[] {
+  const slug = getVacuumSlug(entityId);
+
+  if (!slug) {
+    return [];
+  }
+
+  return [
+    {
+      entity_id: `select.${slug}_clean_room`,
+      icon: 'mdi:door-open',
+      name: 'Room',
     },
   ];
 }
@@ -95,8 +118,11 @@ export default function buildConfig(
     show_status: config.show_status ?? true,
     show_toolbar: config.show_toolbar ?? true,
     show_map_toggle: config.show_map_toggle ?? true,
+    show_header_selects: config.show_header_selects ?? true,
     show_header_stats: config.show_header_stats ?? true,
     compact_view: config.compact_view ?? false,
+    header_selects:
+      config.header_selects ?? getDefaultHeaderSelects(config.entity),
     header_stats: config.header_stats ?? [],
     stats: config.stats ?? {},
     actions: config.actions ?? {},

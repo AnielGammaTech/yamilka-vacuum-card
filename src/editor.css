@@ -1,19 +1,171 @@
 .card-config {
-  flex-direction: column;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 14px;
+  padding: 2px 0 20px;
 }
 
-.option {
+.editor-section {
+  background: color-mix(in srgb, var(--primary-text-color) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--divider-color) 72%, transparent);
+  border-radius: 10px;
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+.section-heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.section-heading h3 {
+  color: var(--primary-text-color);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.section-heading p {
+  color: var(--secondary-text-color);
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 3px 0 0;
+}
+
+.main-grid,
+.row-fields {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  min-width: 0;
+}
+
+.metric-fields {
+  grid-template-columns: minmax(210px, 1.3fr) minmax(120px, 0.8fr) minmax(
+      72px,
+      0.45fr
+    ) minmax(140px, 0.8fr);
+}
+
+.setting-fields {
+  grid-template-columns: minmax(220px, 1.4fr) minmax(150px, 0.8fr) minmax(
+      140px,
+      0.8fr
+    );
+}
+
+.single-field {
+  grid-template-columns: 1fr;
+}
+
+.switch-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.switch-option {
+  align-items: center;
+  color: var(--primary-text-color);
+  display: inline-flex;
+  gap: 8px;
+  min-height: 34px;
+}
+
+.switch-option ha-switch {
+  flex: 0 0 auto;
+}
+
+.editor-row {
+  align-items: end;
+  border-top: 1px solid color-mix(in srgb, var(--divider-color) 55%, transparent);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-top: 12px;
+}
+
+.section-row {
   align-items: center;
 }
 
-.option ha-switch {
-  margin-right: 10px;
+.row-actions {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  padding-bottom: 4px;
 }
 
-.option ha-select,
-.option paper-input {
+.row-actions button,
+.add-button {
+  align-items: center;
+  background: color-mix(in srgb, var(--primary-text-color) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--divider-color) 78%, transparent);
+  border-radius: 8px;
+  color: var(--primary-text-color);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 6px;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.row-actions button {
+  border-radius: 999px;
+  height: 34px;
+  padding: 0;
+  width: 34px;
+}
+
+.row-actions button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.row-actions ha-icon,
+.add-button ha-icon {
+  --mdc-icon-size: 18px;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+ha-select,
+paper-input {
   width: 100%;
+}
+
+.entity-id {
+  color: var(--secondary-text-color);
+  display: block;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+@media (max-width: 720px) {
+  .editor-row {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .row-actions {
+    justify-content: flex-end;
+    padding-bottom: 0;
+  }
+
+  .metric-fields,
+  .setting-fields {
+    grid-template-columns: 1fr;
+  }
 }

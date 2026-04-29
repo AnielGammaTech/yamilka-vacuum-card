@@ -47,6 +47,12 @@ export interface VacuumCardStat {
   subtitle?: string;
 }
 
+export interface VacuumCardHeaderSelect {
+  entity_id?: string;
+  name?: string;
+  icon?: string;
+}
+
 export type VacuumCardMapMode = 'drawer' | 'side' | 'replace' | 'hidden';
 
 export interface VacuumCardAction {
@@ -86,8 +92,10 @@ export interface VacuumCardConfig {
   show_status: boolean;
   show_toolbar: boolean;
   show_map_toggle: boolean;
+  show_header_selects: boolean;
   show_header_stats: boolean;
   compact_view: boolean;
+  header_selects: VacuumCardHeaderSelect[];
   header_stats: VacuumCardStat[];
   stats: Record<string, VacuumCardStat[]>;
   actions: Record<string, VacuumCardAction>;
