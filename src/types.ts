@@ -69,6 +69,16 @@ export interface VacuumCardShortcut {
   target?: HassServiceTarget;
 }
 
+export interface VacuumCardToolbarButton {
+  action?: string;
+  name?: string;
+  icon?: string;
+  states?: string[];
+  service?: string;
+  service_data?: Record<string, unknown>;
+  target?: HassServiceTarget;
+}
+
 export type VacuumCardSetting =
   | string
   | {
@@ -99,6 +109,7 @@ export interface VacuumCardConfig {
   header_stats: VacuumCardStat[];
   stats: Record<string, VacuumCardStat[]>;
   actions: Record<string, VacuumCardAction>;
+  toolbar_buttons: VacuumCardToolbarButton[];
   shortcuts: VacuumCardShortcut[];
   settings: VacuumCardSetting[];
 }

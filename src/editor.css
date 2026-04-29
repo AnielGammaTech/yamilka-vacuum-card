@@ -60,6 +60,13 @@
     );
 }
 
+.toolbar-fields {
+  grid-template-columns: minmax(130px, 0.9fr) minmax(150px, 1fr) minmax(
+      140px,
+      0.8fr
+    ) minmax(220px, 1.4fr);
+}
+
 .single-field {
   grid-template-columns: 1fr;
 }
@@ -142,7 +149,6 @@
 }
 
 ha-select,
-ha-entity-picker,
 paper-input {
   width: 100%;
 }
@@ -159,7 +165,8 @@ paper-input {
   }
 
   .metric-fields,
-  .setting-fields {
+  .setting-fields,
+  .toolbar-fields {
     grid-template-columns: 1fr;
   }
 }

@@ -126,6 +126,7 @@ export default function buildConfig(
     header_stats: config.header_stats ?? [],
     stats: config.stats ?? {},
     actions: config.actions ?? {},
+    toolbar_buttons: config.toolbar_buttons ?? [],
     shortcuts: config.shortcuts ?? [],
     settings: config.settings ?? getDefaultSettings(config.entity),
   };

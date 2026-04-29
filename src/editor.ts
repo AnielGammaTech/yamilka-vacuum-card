@@ -12,13 +12,12 @@ import {
   VacuumCardConfig,
   VacuumCardHeaderSelect,
   VacuumCardMapMode,
-  VacuumCardSetting,
   VacuumCardStat,
+  VacuumCardToolbarButton,
 } from './types';
 import {
   getDefaultHeaderSelects,
   getDefaultHeaderStats,
-  getDefaultSettings,
   getVacuumSlug,
 } from './config';
 import styles from './editor.css';
@@ -28,22 +27,62 @@ type ConfigElement = HTMLInputElement & {
   configValue?: keyof VacuumCardConfig;
 };
 
-type SettingEntity = Exclude<VacuumCardSetting, string>;
-
-const ENTITY_DOMAINS = [
-  'sensor',
-  'select',
-  'switch',
-  'button',
-  'number',
-  'time',
-  'binary_sensor',
-  'camera',
-  'image',
-  'vacuum',
-];
-
 const MAP_MODES: VacuumCardMapMode[] = ['drawer', 'side', 'replace', 'hidden'];
+const TOOLBAR_ACTIONS = [
+  'start',
+  'pause',
+  'stop',
+  'return_to_base',
+  'locate',
+  'resume',
+];
+const DEFAULT_TOOLBAR_BUTTONS: VacuumCardToolbarButton[] = [
+  {
+    action: 'pause',
+    icon: 'mdi:pause',
+    name: 'Pause',
+    states: ['cleaning', 'on', 'auto', 'spot', 'edge', 'single_room', 'returning'],
+  },
+  {
+    action: 'stop',
+    icon: 'mdi:stop',
+    name: 'Stop',
+    states: ['cleaning', 'on', 'auto', 'spot', 'edge', 'single_room'],
+  },
+  {
+    action: 'return_to_base',
+    icon: 'mdi:home-import-outline',
+    name: 'Dock',
+    states: [
+      'cleaning',
+      'on',
+      'auto',
+      'spot',
+      'edge',
+      'single_room',
+      'paused',
+      'idle',
+    ],
+  },
+  {
+    action: 'resume',
+    icon: 'mdi:play',
+    name: 'Continue',
+    states: ['paused', 'returning'],
+  },
+  {
+    action: 'start',
+    icon: 'mdi:play',
+    name: 'Clean',
+    states: ['docked', 'idle'],
+  },
+  {
+    action: 'locate',
+    icon: 'mdi:crosshairs-gps',
+    name: 'Locate',
+    states: ['docked', 'idle'],
+  },
+];
 
 @customElement('yamilka-vacuum-card-editor')
 export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
@@ -168,22 +207,14 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
     `;
   }
 
-  private renderEntityPicker(
+  private renderEntityInput(
     label: string,
     value: string | undefined,
     onChange: (value: string) => void,
-    domains: string[] = ENTITY_DOMAINS,
+    placeholder = 'domain.entity_name',
   ): Template {
     return html`
-      <ha-entity-picker
-        .hass=${this.hass}
-        .label=${label}
-        .value=${value ?? ''}
-        .includeDomains=${domains}
-        allow-custom-entity
-        @value-changed=${(event: CustomEvent<{ value?: string }>) =>
-          onChange(event.detail.value ?? '')}
-      ></ha-entity-picker>
+      ${this.renderTextInput(label, value, onChange, placeholder)}
     `;
   }
 
@@ -266,11 +297,11 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
           (row, index) => html`
             <div class="editor-row">
               <div class="row-fields">
-                ${this.renderEntityPicker(
+                ${this.renderEntityInput(
                   'Entity',
                   row.entity_id,
                   (value) => this.updateHeaderSelect(index, { entity_id: value }),
-                  ['select'],
+                  'select.yamilka_clean_room',
                 )}
                 ${this.renderTextInput('Label', row.name, (value) =>
                   this.updateHeaderSelect(index, { name: value }),
@@ -345,11 +376,11 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
           (row, index) => html`
             <div class="editor-row">
               <div class="row-fields metric-fields">
-                ${this.renderEntityPicker(
+                ${this.renderEntityInput(
                   'Entity',
                   row.entity_id,
                   (value) => this.updateHeaderStat(index, { entity_id: value }),
-                  ['sensor', 'binary_sensor', 'number'],
+                  'sensor.yamilka_cleaning_area',
                 )}
                 ${this.renderTextInput('Label', row.subtitle, (value) =>
                   this.updateHeaderStat(index, { subtitle: value }),
@@ -393,134 +424,103 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
     `;
   }
 
-  private getSettingsForEditor(): VacuumCardSetting[] {
-    if (this.config.settings) {
-      return this.config.settings;
+  private getToolbarButtonsForEditor(): VacuumCardToolbarButton[] {
+    if (this.config.toolbar_buttons) {
+      return this.config.toolbar_buttons;
     }
 
-    return getDefaultSettings(this.config.entity ?? '');
+    return DEFAULT_TOOLBAR_BUTTONS;
   }
 
-  private setSettings(settings: VacuumCardSetting[]): void {
-    this.updateConfig({ settings });
+  private setToolbarButtons(toolbar_buttons: VacuumCardToolbarButton[]): void {
+    this.updateConfig({ toolbar_buttons });
   }
 
-  private isSection(setting: VacuumCardSetting): boolean {
-    return (
-      typeof setting !== 'string' &&
-      !setting.entity &&
-      !setting.entity_id &&
-      Boolean(setting.label)
-    );
-  }
-
-  private updateSetting(
+  private updateToolbarButton(
     index: number,
-    patch: Partial<SettingEntity>,
+    patch: Partial<VacuumCardToolbarButton>,
   ): void {
-    const rows = [...this.getSettingsForEditor()];
-    const current =
-      typeof rows[index] === 'string'
-        ? { entity: rows[index] as string }
-        : (rows[index] as SettingEntity);
-
-    rows[index] = { ...current, ...patch };
-    this.setSettings(rows);
+    const rows = [...this.getToolbarButtonsForEditor()];
+    rows[index] = { ...rows[index], ...patch };
+    this.setToolbarButtons(rows);
   }
 
-  private renderSettingEditor(): Template {
-    const rows = this.getSettingsForEditor();
+  private parseStateList(value: string): string[] {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  private renderToolbarButtonEditor(): Template {
+    const rows = this.getToolbarButtonsForEditor();
 
     return html`
       <section class="editor-section">
         <div class="section-heading">
           <div>
-            <h3>Settings Popup</h3>
-            <p>Rows shown when the tune icon opens the popup.</p>
+            <h3>Main Buttons</h3>
+            <p>Edit the buttons shown on the card toolbar.</p>
           </div>
+          ${this.renderSwitch('Show', 'show_toolbar', true)}
         </div>
-        ${rows.map((setting, index) => {
-          if (this.isSection(setting)) {
-            const row = setting as SettingEntity;
-            return html`
-              <div class="editor-row section-row">
-                <div class="row-fields single-field">
-                  ${this.renderTextInput('Section', row.label, (value) =>
-                    this.updateSetting(index, {
-                      entity: undefined,
-                      entity_id: undefined,
-                      label: value,
-                      type: 'section',
-                    }),
-                  )}
-                </div>
-                ${this.renderRowActions(
-                  index,
-                  rows.length,
-                  (from, to) => this.setSettings(this.moveItem(rows, from, to)),
-                  (rowIndex) =>
-                    this.setSettings(rows.filter((_, i) => i !== rowIndex)),
-                )}
-              </div>
-            `;
-          }
-
-          const row =
-            typeof setting === 'string'
-              ? { entity: setting }
-              : (setting as SettingEntity);
-          const entityId = row.entity ?? row.entity_id;
-
-          return html`
+        ${rows.map(
+          (row, index) => html`
             <div class="editor-row">
-              <div class="row-fields setting-fields">
-                ${this.renderEntityPicker('Entity', entityId, (value) =>
-                  this.updateSetting(index, { entity: value }),
-                )}
+              <div class="row-fields toolbar-fields">
                 ${this.renderTextInput('Label', row.name, (value) =>
-                  this.updateSetting(index, { name: value }),
+                  this.updateToolbarButton(index, { name: value }),
                 )}
                 ${this.renderTextInput(
                   'Icon',
                   row.icon,
-                  (value) => this.updateSetting(index, { icon: value }),
-                  'mdi:cog-outline',
+                  (value) => this.updateToolbarButton(index, { icon: value }),
+                  'mdi:gesture-tap-button',
+                )}
+                ${this.renderSelectInput(
+                  'Action',
+                  row.action,
+                  TOOLBAR_ACTIONS,
+                  (value) => this.updateToolbarButton(index, { action: value }),
+                  false,
+                )}
+                ${this.renderTextInput(
+                  'Visible States',
+                  row.states?.join(', '),
+                  (value) =>
+                    this.updateToolbarButton(index, {
+                      states: this.parseStateList(value),
+                    }),
+                  'cleaning, paused, idle',
                 )}
               </div>
               ${this.renderRowActions(
                 index,
                 rows.length,
-                (from, to) => this.setSettings(this.moveItem(rows, from, to)),
+                (from, to) =>
+                  this.setToolbarButtons(this.moveItem(rows, from, to)),
                 (rowIndex) =>
-                  this.setSettings(rows.filter((_, i) => i !== rowIndex)),
+                  this.setToolbarButtons(rows.filter((_, i) => i !== rowIndex)),
               )}
             </div>
-          `;
-        })}
-        <div class="button-row">
-          <button
-            class="add-button"
-            @click=${() =>
-              this.setSettings([
-                ...rows,
-                { entity: '', icon: 'mdi:cog-outline', name: 'Setting' },
-              ])}
-          >
-            <ha-icon icon="mdi:plus"></ha-icon>
-            Add setting
-          </button>
-          <button
-            class="add-button"
-            @click=${() =>
-              this.setSettings([
-                ...rows,
-                { type: 'section', label: 'Section' },
-              ])}
-          >
-            <ha-icon icon="mdi:format-header-1"></ha-icon>
-            Add section
-          </button>
-        </div>
+          `,
+        )}
+        <button
+          class="add-button"
+          @click=${() =>
+            this.setToolbarButtons([
+              ...rows,
+              {
+                action: 'start',
+                icon: 'mdi:play',
+                name: 'Clean',
+                states: ['idle', 'docked'],
+              },
+            ])}
+        >
+          <ha-icon icon="mdi:plus"></ha-icon>
+          Add button
+        </button>
       </section>
     `;
   }
@@ -540,29 +540,29 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
             </div>
           </div>
           <div class="main-grid">
-            ${this.renderEntityPicker(
+            ${this.renderEntityInput(
               localize('editor.entity') ?? 'Entity',
               this.config.entity,
               (value) => this.updateConfig({ entity: value }),
-              ['vacuum'],
+              'vacuum.yamilka',
             )}
-            ${this.renderEntityPicker(
+            ${this.renderEntityInput(
               localize('editor.battery_entity') ?? 'Battery Entity',
               this.config.battery_entity,
               (value) =>
                 value
                   ? this.updateConfig({ battery_entity: value })
                   : this.updateConfig({}, ['battery_entity']),
-              ['sensor'],
+              'sensor.yamilka_battery',
             )}
-            ${this.renderEntityPicker(
+            ${this.renderEntityInput(
               localize('editor.map') ?? 'Map Camera',
               this.config.map,
               (value) =>
                 value
                   ? this.updateConfig({ map: value })
                   : this.updateConfig({}, ['map']),
-              ['camera', 'image'],
+              'camera.yamilka_map',
             )}
             ${this.renderSelectInput(
               'Map Mode',
@@ -607,17 +607,12 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
               'show_status',
               true,
             )}
-            ${this.renderSwitch(
-              localize('editor.show_toolbar') ?? 'Show Toolbar',
-              'show_toolbar',
-              true,
-            )}
             ${this.renderSwitch('Map Button', 'show_map_toggle', true)}
           </div>
         </section>
 
+        ${this.renderToolbarButtonEditor()}
         ${this.renderHeaderSelectEditor()} ${this.renderHeaderStatEditor()}
-        ${this.renderSettingEditor()}
       </div>
     `;
   }

@@ -28,6 +28,7 @@ import {
   VacuumCardHeaderSelect,
   VacuumCardSetting,
   VacuumCardStat,
+  VacuumCardToolbarButton,
 } from './types';
 import DEFAULT_IMAGE from './vacuum.svg';
 import YAMILKA_IMAGE from './yamilka-vacuum.png';
@@ -252,6 +253,18 @@ export class VacuumCard extends LitElement {
 
       this.callService(this.config.actions[action]);
     };
+  }
+
+  private getToolbarActionParams(action: string): VacuumActionParams {
+    if (action === 'resume') {
+      return { defaultService: 'start', request: true };
+    }
+
+    if (action === 'locate') {
+      return { request: false };
+    }
+
+    return { request: true };
   }
 
   private getAttributes(entity: VacuumEntity) {
@@ -947,6 +960,10 @@ export class VacuumCard extends LitElement {
       return nothing;
     }
 
+    if (this.config.toolbar_buttons.length) {
+      return this.renderCustomToolbar(state);
+    }
+
     switch (state) {
       case 'on':
       case 'auto':
@@ -1060,6 +1077,59 @@ export class VacuumCard extends LitElement {
         `;
       }
     }
+  }
+
+  private shouldShowToolbarButton(
+    button: VacuumCardToolbarButton,
+    state: VacuumEntityState,
+  ): boolean {
+    if (!button.states?.length) {
+      return true;
+    }
+
+    return button.states
+      .map((item) => item.toLowerCase())
+      .includes(state.toLowerCase());
+  }
+
+  private renderCustomToolbar(state: VacuumEntityState): Template {
+    const buttons = this.config.toolbar_buttons.filter((button) =>
+      this.shouldShowToolbarButton(button, state),
+    );
+
+    if (!buttons.length) {
+      return nothing;
+    }
+
+    return html`
+      <div class="toolbar custom-toolbar">
+        ${buttons.map((button) => {
+          const action = button.action ?? '';
+          const execute = () => {
+            if (button.service) {
+              return this.callService({
+                service: button.service,
+                service_data: button.service_data,
+                target: button.target,
+              });
+            }
+
+            return this.handleVacuumAction(
+              action,
+              this.getToolbarActionParams(action),
+            )();
+          };
+
+          return html`
+            <paper-button @click="${execute}">
+              <ha-icon icon="${button.icon ?? 'mdi:gesture-tap-button'}">
+              </ha-icon>
+              ${button.name ?? action}
+            </paper-button>
+          `;
+        })}
+      </div>
+    `;
   }
 
   private renderUnavailable(): Template {
