@@ -14,7 +14,7 @@ type ConfigElement = HTMLInputElement & {
   configValue?: keyof VacuumCardConfig;
 };
 
-@customElement('vacuum-card-editor')
+@customElement('yamilka-vacuum-card-editor')
 export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
   @property({ attribute: false }) public hass?: HomeAssistant;
 

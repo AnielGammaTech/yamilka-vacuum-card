@@ -63,7 +63,7 @@ export class VacuumCard extends LitElement {
 
   public static async getConfigElement() {
     await import('./editor');
-    return document.createElement('vacuum-card-editor');
+    return document.createElement('yamilka-vacuum-card-editor');
   }
 
   static getStubConfig(_: unknown, entities: string[]) {
@@ -396,18 +396,6 @@ export class VacuumCard extends LitElement {
   }
 
   private handleSettingRow(entity: HassEntity): void {
-    const domain = this.getDomain(entity.entity_id);
-
-    if (domain === 'button') {
-      this.pressButton(entity.entity_id);
-      return;
-    }
-
-    if (domain === 'switch') {
-      this.toggleSwitch(entity.entity_id);
-      return;
-    }
-
     this.handleMore(entity.entity_id);
   }
 
