@@ -28,6 +28,7 @@ import {
   VacuumCardSetting,
 } from './types';
 import DEFAULT_IMAGE from './vacuum.svg';
+import YAMILKA_IMAGE from './yamilka-vacuum.png';
 
 registerTemplates();
 
@@ -559,7 +560,11 @@ export class VacuumCard extends LitElement {
     }
 
     const src =
-      this.config.image === 'default' ? DEFAULT_IMAGE : this.config.image;
+      this.config.image === 'default'
+        ? DEFAULT_IMAGE
+        : this.config.image === 'yamilka'
+          ? YAMILKA_IMAGE
+          : this.config.image;
 
     return html`
       <img

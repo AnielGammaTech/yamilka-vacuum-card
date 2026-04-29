@@ -22,7 +22,7 @@ export default function buildConfig(
     battery_entity: config.battery_entity ?? '',
     map: config.map ?? '',
     map_refresh: config.map_refresh ?? 5,
-    image: config.image ?? 'default',
+    image: config.image ?? 'yamilka',
     show_name: config.show_name ?? true,
     show_status: config.show_status ?? true,
     show_toolbar: config.show_toolbar ?? true,
