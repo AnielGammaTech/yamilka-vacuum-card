@@ -31,7 +31,7 @@ import {
   VacuumCardToolbarButton,
 } from './types';
 import DEFAULT_IMAGE from './vacuum.svg';
-import YAMILKA_IMAGE from './yamilka-vacuum.png';
+import EUFY_S1_IMAGE from './eufy-s1-vacuum.png';
 
 registerTemplates();
 
@@ -51,7 +51,7 @@ if (!customElements.get('ha-icon-button')) {
   );
 }
 
-@customElement('yamilka-vacuum-card')
+@customElement('eufy-s1-vacuum-card')
 export class VacuumCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
 
@@ -67,7 +67,7 @@ export class VacuumCard extends LitElement {
 
   public static async getConfigElement() {
     await import('./editor');
-    return document.createElement('yamilka-vacuum-card-editor');
+    return document.createElement('eufy-s1-vacuum-card-editor');
   }
 
   static getStubConfig(_: unknown, entities: string[]) {
@@ -863,8 +863,8 @@ export class VacuumCard extends LitElement {
     const src =
       this.config.image === 'default'
         ? DEFAULT_IMAGE
-        : this.config.image === 'yamilka'
-          ? YAMILKA_IMAGE
+        : this.config.image === 'eufy-s1'
+          ? EUFY_S1_IMAGE
           : this.config.image;
 
     return html`
@@ -1211,7 +1211,7 @@ declare global {
 window.customCards = window.customCards || [];
 window.customCards.push({
   preview: true,
-  type: 'yamilka-vacuum-card',
-  name: 'Yamilka Vacuum Card',
+  type: 'eufy-s1-vacuum-card',
+  name: 'Eufy S1 Vacuum Card',
   description: localize('common.description'),
 });

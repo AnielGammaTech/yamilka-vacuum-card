@@ -112,7 +112,7 @@ export default function buildConfig(
     map: config.map ?? '',
     map_mode: config.map_mode ?? 'drawer',
     map_refresh: config.map_refresh ?? 5,
-    image: config.image ?? 'yamilka',
+    image: config.image ?? 'eufy-s1',
     card_width: config.card_width ?? '260px',
     show_name: config.show_name ?? true,
     show_status: config.show_status ?? true,

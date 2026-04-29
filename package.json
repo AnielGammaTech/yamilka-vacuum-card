@@ -1,8 +1,8 @@
 {
-  "name": "vacuum-card",
+  "name": "eufy-s1-vacuum-card",
   "version": "2.11.7",
   "type": "module",
-  "description": "Vacuum cleaner card for Home Assistant Lovelace UI",
+  "description": "Eufy S1 vacuum card for Home Assistant Lovelace UI",
   "main": "dist/vacuum-card.js",
   "scripts": {
     "start": "rollup -c --watch",
@@ -22,16 +22,17 @@
     "automation",
     "lovelace",
     "custom-cards",
-    "vacuum"
+    "vacuum",
+    "eufy",
+    "eufy-s1"
   ],
   "author": {
-    "name": "Denys Dovhan",
-    "email": "denysdovhan@gmail.com",
-    "url": "http://denysdovhan.com"
+    "name": "AnielGammaTech",
+    "url": "https://github.com/AnielGammaTech"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/denysdovhan/vacuum-card.git"
+    "url": "https://github.com/AnielGammaTech/eufy-s1-vacuum-card.git"
   },
   "license": "MIT",
   "dependencies": {

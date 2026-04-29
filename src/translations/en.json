@@ -42,8 +42,8 @@
     "off": "Off"
   },
   "common": {
-    "name": "Vacuum Card",
-    "description": "Vacuum card allows you to control your robot vacuum.",
+    "name": "Eufy S1 Vacuum Card",
+    "description": "A dashboard card for controlling Eufy S1 robot vacuums.",
     "start": "Clean",
     "continue": "Continue",
     "pause": "Pause",

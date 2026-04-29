@@ -84,7 +84,7 @@ const DEFAULT_TOOLBAR_BUTTONS: VacuumCardToolbarButton[] = [
   },
 ];
 
-@customElement('yamilka-vacuum-card-editor')
+@customElement('eufy-s1-vacuum-card-editor')
 export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
   @property({ attribute: false }) public hass?: HomeAssistant;
 
@@ -301,7 +301,7 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
                   'Entity',
                   row.entity_id,
                   (value) => this.updateHeaderSelect(index, { entity_id: value }),
-                  'select.yamilka_clean_room',
+                  'select.eufy_s1_clean_room',
                 )}
                 ${this.renderTextInput('Label', row.name, (value) =>
                   this.updateHeaderSelect(index, { name: value }),
@@ -380,7 +380,7 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
                   'Entity',
                   row.entity_id,
                   (value) => this.updateHeaderStat(index, { entity_id: value }),
-                  'sensor.yamilka_cleaning_area',
+                  'sensor.eufy_s1_cleaning_area',
                 )}
                 ${this.renderTextInput('Label', row.subtitle, (value) =>
                   this.updateHeaderStat(index, { subtitle: value }),
@@ -544,7 +544,7 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
               localize('editor.entity') ?? 'Entity',
               this.config.entity,
               (value) => this.updateConfig({ entity: value }),
-              'vacuum.yamilka',
+              'vacuum.eufy_s1',
             )}
             ${this.renderEntityInput(
               localize('editor.battery_entity') ?? 'Battery Entity',
@@ -553,7 +553,7 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
                 value
                   ? this.updateConfig({ battery_entity: value })
                   : this.updateConfig({}, ['battery_entity']),
-              'sensor.yamilka_battery',
+              'sensor.eufy_s1_battery',
             )}
             ${this.renderEntityInput(
               localize('editor.map') ?? 'Map Camera',
@@ -562,7 +562,7 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
                 value
                   ? this.updateConfig({ map: value })
                   : this.updateConfig({}, ['map']),
-              'camera.yamilka_map',
+              'camera.eufy_s1_map',
             )}
             ${this.renderSelectInput(
               'Map Mode',
@@ -588,7 +588,7 @@ export class VacuumCardEditor extends LitElement implements LovelaceCardEditor {
                 value
                   ? this.updateConfig({ image: value })
                   : this.updateConfig({}, ['image']),
-              'yamilka',
+              'eufy-s1',
             )}
           </div>
           <div class="switch-grid">
