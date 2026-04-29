@@ -47,6 +47,8 @@ export interface VacuumCardStat {
   subtitle?: string;
 }
 
+export type VacuumCardMapMode = 'drawer' | 'side' | 'replace' | 'hidden';
+
 export interface VacuumCardAction {
   service: string;
   service_data?: Record<string, unknown>;
@@ -76,12 +78,14 @@ export interface VacuumCardConfig {
   entity: string;
   battery_entity: string;
   map: string;
+  map_mode: VacuumCardMapMode;
   map_refresh: number;
   image: string;
   card_width: string;
   show_name: boolean;
   show_status: boolean;
   show_toolbar: boolean;
+  show_map_toggle: boolean;
   show_header_stats: boolean;
   compact_view: boolean;
   header_stats: VacuumCardStat[];

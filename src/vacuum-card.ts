@@ -56,6 +56,7 @@ export class VacuumCard extends LitElement {
   @state() private config!: VacuumCardConfig;
   @state() private requestInProgress = false;
   @state() private settingsOpen = false;
+  @state() private mapOpen = false;
   @state() private thumbUpdater: ReturnType<typeof setInterval> | null = null;
 
   static get styles(): CSSResultGroup {
@@ -101,7 +102,16 @@ export class VacuumCard extends LitElement {
 
   public getCardSize(): number {
     const baseSize = this.config.compact_view ? 3 : 8;
-    return this.settingsOpen ? baseSize + 5 : baseSize;
+    const settingsSize = this.settingsOpen ? 5 : 0;
+    const mapSize =
+      this.mapOpen &&
+      this.hasMap() &&
+      this.config.map_mode !== 'replace' &&
+      this.config.map_mode !== 'hidden'
+        ? 4
+        : 0;
+
+    return baseSize + settingsSize + mapSize;
   }
 
   public shouldUpdate(changedProps: PropertyValues): boolean {
@@ -438,6 +448,25 @@ export class VacuumCard extends LitElement {
     this.settingsOpen = !this.settingsOpen;
   }
 
+  private hasMap(): boolean {
+    return Boolean(this.map?.attributes.entity_picture);
+  }
+
+  private getMapImageSrc(): string {
+    const src = this.map?.attributes.entity_picture;
+
+    if (!src) {
+      return '';
+    }
+
+    return `${src}${src.includes('?') ? '&' : '?'}v=${Date.now()}`;
+  }
+
+  private toggleMap(event: Event): void {
+    event.stopPropagation();
+    this.mapOpen = !this.mapOpen;
+  }
+
   private getSettingEntityId(setting: VacuumCardSetting): string | undefined {
     if (typeof setting === 'string') {
       return setting;
@@ -517,9 +546,27 @@ export class VacuumCard extends LitElement {
         label="Settings"
         @click="${this.toggleSettings}"
         ><ha-icon
-          icon="${this.settingsOpen ? 'mdi:chevron-up' : 'mdi:tune'}"
+          icon="${this.settingsOpen ? 'mdi:chevron-up' : 'mdi:tune-vertical'}"
         ></ha-icon
       ></ha-icon-button>
+    `;
+  }
+
+  private renderMapToggle(): Template {
+    if (
+      !this.config.show_map_toggle ||
+      this.config.map_mode === 'replace' ||
+      this.config.map_mode === 'hidden' ||
+      !this.hasMap()
+    ) {
+      return nothing;
+    }
+
+    return html`
+      <ha-icon-button class="map-toggle" label="Map" @click="${this.toggleMap}">
+        <ha-icon icon="${this.mapOpen ? 'mdi:map-marker-off' : 'mdi:map-outline'}">
+        </ha-icon>
+      </ha-icon-button>
     `;
   }
 
@@ -637,17 +684,47 @@ export class VacuumCard extends LitElement {
     `;
   }
 
+  private renderMapPanel(mode: 'drawer' | 'side'): Template {
+    if (
+      !this.mapOpen ||
+      this.config.map_mode !== mode ||
+      !this.hasMap()
+    ) {
+      return nothing;
+    }
+
+    return html`
+      <div class="map-panel ${mode}">
+        <div class="map-panel-header">
+          <span>Map</span>
+          <button
+            class="map-panel-more"
+            @click=${() => this.handleMore(this.config.map)}
+          >
+            Open
+            <ha-icon icon="mdi:open-in-new"></ha-icon>
+          </button>
+        </div>
+        <img
+          class="map-panel-image"
+          src="${this.getMapImageSrc()}"
+          @click=${() => this.handleMore(this.config.map)}
+        />
+      </div>
+    `;
+  }
+
   private renderMapOrImage(state: VacuumEntityState): Template {
     if (this.config.compact_view) {
       return nothing;
     }
 
-    if (this.map) {
-      return this.map && this.map.attributes.entity_picture
+    if (this.map && this.config.map_mode === 'replace') {
+      return this.hasMap()
         ? html`
             <img
               class="map"
-              src="${this.map.attributes.entity_picture}&v=${Date.now()}"
+              src="${this.getMapImageSrc()}"
               @click=${() => this.handleMore(this.config.map)}
             />
           `
@@ -764,15 +841,15 @@ export class VacuumCard extends LitElement {
         return html`
           <div class="toolbar">
             <paper-button @click="${this.handleVacuumAction('pause')}">
-              <ha-icon icon="hass:pause"></ha-icon>
+              <ha-icon icon="mdi:pause"></ha-icon>
               ${localize('common.pause')}
             </paper-button>
             <paper-button @click="${this.handleVacuumAction('stop')}">
-              <ha-icon icon="hass:stop"></ha-icon>
+              <ha-icon icon="mdi:stop"></ha-icon>
               ${localize('common.stop')}
             </paper-button>
             <paper-button @click="${this.handleVacuumAction('return_to_base')}">
-              <ha-icon icon="hass:home-map-marker"></ha-icon>
+              <ha-icon icon="mdi:home-import-outline"></ha-icon>
               ${localize('common.return_to_base')}
             </paper-button>
           </div>
@@ -788,11 +865,11 @@ export class VacuumCard extends LitElement {
                 request: true,
               })}"
             >
-              <ha-icon icon="hass:play"></ha-icon>
+              <ha-icon icon="mdi:play"></ha-icon>
               ${localize('common.continue')}
             </paper-button>
             <paper-button @click="${this.handleVacuumAction('return_to_base')}">
-              <ha-icon icon="hass:home-map-marker"></ha-icon>
+              <ha-icon icon="mdi:home-import-outline"></ha-icon>
               ${localize('common.return_to_base')}
             </paper-button>
           </div>
@@ -808,11 +885,11 @@ export class VacuumCard extends LitElement {
                 request: true,
               })}"
             >
-              <ha-icon icon="hass:play"></ha-icon>
+              <ha-icon icon="mdi:play"></ha-icon>
               ${localize('common.continue')}
             </paper-button>
             <paper-button @click="${this.handleVacuumAction('pause')}">
-              <ha-icon icon="hass:pause"></ha-icon>
+              <ha-icon icon="mdi:pause"></ha-icon>
               ${localize('common.pause')}
             </paper-button>
           </div>
@@ -840,7 +917,7 @@ export class VacuumCard extends LitElement {
           <ha-icon-button
             label="${localize('common.return_to_base')}"
             @click="${this.handleVacuumAction('return_to_base')}"
-            ><ha-icon icon="hass:home-map-marker"></ha-icon>
+            ><ha-icon icon="mdi:home-import-outline"></ha-icon>
           </ha-icon-button>
         `;
 
@@ -849,18 +926,20 @@ export class VacuumCard extends LitElement {
             <ha-icon-button
               label="${localize('common.start')}"
               @click="${this.handleVacuumAction('start')}"
-              ><ha-icon icon="hass:play"></ha-icon>
+              ><ha-icon icon="mdi:play"></ha-icon>
             </ha-icon-button>
 
             <ha-icon-button
               label="${localize('common.locate')}"
               @click="${this.handleVacuumAction('locate', { request: false })}"
-              ><ha-icon icon="mdi:map-marker"></ha-icon>
+              ><ha-icon icon="mdi:crosshairs-gps"></ha-icon>
             </ha-icon-button>
 
             ${state === 'idle' ? dockButton : ''}
-            <div class="fill-gap"></div>
-            ${buttons}
+            ${buttons.length
+              ? html`<div class="fill-gap"></div>
+                  ${buttons}`
+              : nothing}
           </div>
         `;
       }
@@ -888,7 +967,6 @@ export class VacuumCard extends LitElement {
 
     return html`
       <ha-card>
-        <ha-ripple></ha-ripple>
         <div class="preview">
           <div class="header">
             <div class="tips">
@@ -896,6 +974,7 @@ export class VacuumCard extends LitElement {
               ${this.renderHeaderStats()}
             </div>
             <div class="header-actions">
+              ${this.renderMapToggle()}
               ${this.renderSettingsToggle()}
               <ha-icon-button
                 class="more-info"
@@ -907,13 +986,23 @@ export class VacuumCard extends LitElement {
             </div>
           </div>
 
-          ${this.renderMapOrImage(this.entity.state)}
+          <div
+            class="content ${this.mapOpen && this.config.map_mode === 'side'
+              ? 'with-side-map'
+              : ''}"
+          >
+            <div class="content-main">
+              ${this.renderMapOrImage(this.entity.state)}
 
-          <div class="metadata">
-            ${this.renderName()} ${this.renderStatus()}
+              <div class="metadata">
+                ${this.renderName()} ${this.renderStatus()}
+              </div>
+
+              ${this.renderStats(this.entity.state)}
+              ${this.renderMapPanel('drawer')} ${this.renderSettingsPanel()}
+            </div>
+            ${this.renderMapPanel('side')}
           </div>
-
-          ${this.renderStats(this.entity.state)} ${this.renderSettingsPanel()}
         </div>
 
         ${this.renderToolbar(this.entity.state)}
